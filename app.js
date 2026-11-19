@@ -230,14 +230,53 @@
     show(0);
   })();
 
+  // ------------------------------------------------------------ preguntas frecuentes
+  // Se pintan en la portada y en Ayuda. Cada una lleva un icono del propio pack.
+  const FAQ = [
+    ["blocks/redstone_ore", tr("Does it lower FPS?", "¿Baja los FPS?"),
+      tr("No. It's 16×16, the same resolution as vanilla. The custom sky and connected glass run through OptiFine and cost almost nothing.",
+         "No. Es de 16×16, la misma resolución que vanilla. El cielo y el cristal conectado van por OptiFine y casi no consumen.")],
+    ["blocks/tnt_side", tr("Can I use it on Hypixel?", "¿Puedo usarlo en Hypixel?"),
+      tr("Yes, and on any other server. A resource pack only changes how things look on your screen, so it gives no unfair advantage.",
+         "Sí, y en cualquier otro servidor. Un paquete de recursos solo cambia cómo se ve todo en tu pantalla, así que no da ventajas prohibidas.")],
+    ["blocks/glass_light_blue", tr("I can't see the sky or the connected glass", "No veo el cielo ni el cristal conectado"),
+      tr("You need OptiFine, or Lunar or Badlion, which include it, with <b>Custom Sky</b> and <b>Connected Textures</b> turned on. Then reload with <kbd>F3</kbd> + <kbd>T</kbd>.",
+         "Necesitas OptiFine, o Lunar o Badlion, que lo traen, con <b>Custom Sky</b> y <b>Connected Textures</b> activados. Después recarga con <kbd>F3</kbd> + <kbd>T</kbd>.")],
+    ["items/ender_pearl", tr("Can I use it in videos or streams?", "¿Puedo usarlo en videos o directos?"),
+      tr("Of course. A link to this page in the description is appreciated.",
+         "Claro. Se agradece un enlace a esta página en la descripción.")],
+    ["items/diamond_pickaxe", tr("Can I edit or reupload it?", "¿Puedo editarlo o resubirlo?"),
+      tr("Edit it for yourself as much as you like. Please don't reupload or sell it: share a link to this page instead.",
+         "Edítalo para ti todo lo que quieras. No lo resubas ni lo vendas: comparte el enlace a esta página.")],
+    ["items/emerald", tr("Why does 26.3 have fewer textures?", "¿Por qué 26.3 tiene menos texturas?"),
+      tr("It's being ported in batches. For now it has wool, glass, defense blocks, weapons, tools and shop items.",
+         "Se está portando por partes. Por ahora trae lanas, cristal, bloques de defensa, armas, herramientas y objetos de la tienda.")],
+  ];
+  document.querySelectorAll("[data-faq]").forEach((host) => {
+    const group = "faq-" + host.dataset.faq;
+    FAQ.forEach(([icon, q, a]) => {
+      const t = byId.get(icon);
+      const answer = el("div", { class: "faq-a" });
+      answer.innerHTML = `<p>${a}</p>`;
+      host.append(el("details", { class: "faq-item", name: group },
+        el("summary", {},
+          el("span", { class: "faq-icon" }, t ? texCanvas(t.pack, "") : ""),
+          el("span", { class: "faq-q", text: q }),
+          el("span", { class: "faq-chev", "aria-hidden": "true" })),
+        answer));
+    });
+  });
+
   // ------------------------------------------------------------ bloques en 3D
   // Cubos de CSS 3D con un <canvas> por cara (así las caras animadas se mueven).
-  // [nombre, arriba, lados, frente, abajo]; si falta frente o abajo se usan los lados.
+  // [nombre, arriba, lados, frente, abajo, cristal, alto en píxeles (16 por defecto)];
+  // si falta frente o abajo se usan los lados. Con alto < 16 (mesa de encantamientos,
+  // 12 px) la tapa baja hasta donde empieza el lateral, que es transparente arriba.
   const CUBES = [
     ["TNT", "tnt_top", "tnt_side", null, "tnt_bottom"],
     [tr("Crafting table", "Mesa de crafteo"), "crafting_table_top", "crafting_table_side", "crafting_table_front", "planks_oak"],
     [tr("Lit furnace", "Horno encendido"), "furnace_top", "furnace_side", "furnace_front_on", "furnace_top"],
-    [tr("Enchanting table", "Mesa de encantamientos"), "enchanting_table_top", "enchanting_table_side", null, "enchanting_table_bottom"],
+    [tr("Enchanting table", "Mesa de encantamientos"), "enchanting_table_top", "enchanting_table_side", null, "enchanting_table_bottom", false, 12],
     [tr("Diamond block", "Bloque de diamante"), "diamond_block", "diamond_block"],
     [tr("Emerald block", "Bloque de esmeralda"), "emerald_block", "emerald_block"],
     [tr("Diamond ore", "Mena de diamante"), "diamond_ore", "diamond_ore"],
@@ -251,10 +290,10 @@
     const host = $("#cubes");
     const T = (n) => n && byId.get("blocks/" + n);
     const states = [];
-    CUBES.forEach(([name, top, side, front, bottom, glass], i) => {
+    CUBES.forEach(([name, top, side, front, bottom, glass, height = 16], i) => {
       if (!T(top) || !T(side)) return;
       const faces = { top, bottom: bottom || side, front: front || side, back: side, left: side, right: side };
-      const cube = el("div", { class: "cube" }, ...Object.entries(faces).map(([k, n]) =>
+      const cube = el("div", { class: "cube", style: `--drop:${(16 - height) / 16}` }, ...Object.entries(faces).map(([k, n]) =>
         el("div", { class: `face f-${k}`, style: glass ? "backface-visibility:visible" : "" }, texCanvas((T(n) || T(side)).pack, ""))));
       const cell = el("div", { class: "cube-cell", role: "img", "aria-label": `${name}, ${tr("3D view", "en 3D")}` },
         el("div", { class: "scene" }, cube), el("div", { class: "cube-shadow" }), el("span", { text: name }));

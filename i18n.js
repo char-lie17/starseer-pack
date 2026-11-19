@@ -60,14 +60,11 @@
       <li>Abre <b>Opciones → Paquetes de recursos → Abrir carpeta de paquetes</b> y copia ahí el ZIP.</li>
       <li>Actívalo y pulsa <b>Listo</b>. Esta versión todavía no trae cielo ni cristal conectado.</li>`,
     "inst.trouble": '¿Algo no funciona? Mira la <a href="#/ayuda">ayuda</a>.',
-    "help.faq": `
-      <h1 class="page-title">Ayuda</h1>
-      <details><summary>¿Baja los FPS?</summary><p>No. Es un pack de 16×16, la misma resolución que vanilla. El cielo personalizado y el cristal conectado dependen de OptiFine y su coste es mínimo.</p></details>
-      <details><summary>¿Funciona en Hypixel y otros servidores?</summary><p>Sí. Es un paquete de recursos: solo cambia cómo se ven las cosas en tu pantalla y no da ninguna ventaja prohibida.</p></details>
-      <details><summary>No veo el cielo ni el cristal conectado</summary><p>Necesitas OptiFine (o Lunar o Badlion, que lo integran) con <b>Custom Sky</b> y <b>Connected Textures</b> activados. Después recarga con <kbd>F3</kbd> + <kbd>T</kbd>.</p></details>
-      <details><summary>¿Puedo usarlo en mis videos o directos?</summary><p>Sí, claro. Se agradece que pongas el enlace a esta página en la descripción.</p></details>
-      <details><summary>¿Puedo editarlo o resubirlo?</summary><p>Puedes editarlo para uso personal. No lo resubas a otras webs ni lo vendas. Comparte el enlace a esta página.</p></details>
-      <details><summary>¿Por qué la versión 26.3 tiene menos texturas?</summary><p>Se está portando por partes. Por ahora incluye lanas, cristal, bloques de defensa, armas, herramientas y objetos de la tienda.</p></details>`,
+    "help.title": "Ayuda",
+    "help.lead": "Las dudas de siempre. Si la tuya no está, pregunta en Discord.",
+    "faq.title": "Preguntas",
+    "faq.lead": "Respuestas rápidas antes de instalar.",
+    "faq.more": "Términos de uso y más ayuda →",
     "help.discordTitle": "¿Sigue sin funcionar? Pregunta en Discord",
     "help.discordText": "Cuéntalo en #install-help o abre un hilo en #bugs con tu versión y cliente. Además, te enterarás antes que nadie de las versiones nuevas.",
     "help.discordBtn": "Unirse al Discord",

@@ -280,6 +280,30 @@ h2 { font-size: clamp(1.7rem, 4vw, 2.3rem); }
 details { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 8px; padding: 0 18px; }
 summary { cursor: pointer; padding: 14px 0; font-weight: 600; }
 details p { margin: 0 0 16px; color: var(--muted); }
+
+/* ---------- preguntas frecuentes ---------- */
+.faq { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+@media (max-width: 760px) { .faq { grid-template-columns: 1fr; } }
+.faq-item { margin: 0; padding: 0; overflow: hidden; transition: border-color .2s, background .2s; }
+.faq-item:hover { border-color: #34436a; }
+.faq-item[open] { border-color: rgba(143,230,220,.45); background: linear-gradient(180deg, rgba(143,230,220,.06), transparent 70%), var(--surface); }
+.faq-item summary { list-style: none; display: flex; align-items: center; gap: 14px; padding: 16px 18px; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary:focus-visible { outline: 2px solid var(--mint); outline-offset: -2px; border-radius: var(--radius); }
+.faq-icon { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 8px;
+  background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.faq-icon .tex { width: 28px; height: 28px; image-rendering: pixelated; }
+.faq-q { flex: 1; line-height: 1.35; }
+.faq-chev { flex: none; width: 10px; height: 10px; margin-right: 4px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg) translateY(-3px); transition: transform .25s, border-color .25s; }
+.faq-item[open] .faq-chev { transform: rotate(-135deg) translate(-2px, -1px); border-color: var(--mint); }
+.faq-a { padding: 0 18px 18px 72px; }
+.faq-a p { margin: 0; color: var(--muted); line-height: 1.6; }
+.faq-item[open] .faq-a { animation: faq-in .25s ease-out; }
+@keyframes faq-in { from { opacity: 0; transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .faq-item[open] .faq-a { animation: none; } }
+@media (max-width: 520px) { .faq-a { padding-left: 18px; } }
+.faq-more { margin: 18px 0 0; }
 .terms { padding-left: 1.2em; color: var(--muted); }
 .terms li { margin: 6px 0; }
 .terms b { color: var(--text); }
@@ -430,7 +454,7 @@ figcaption { margin-top: 8px; color: var(--muted); font-size: .9rem; }
 .face.f-back   { transform: rotateY(180deg) translateZ(calc(var(--s) / 2)); --shade: .2; }
 .face.f-right  { transform: rotateY(90deg) translateZ(calc(var(--s) / 2)); --shade: .4; }
 .face.f-left   { transform: rotateY(-90deg) translateZ(calc(var(--s) / 2)); --shade: .4; }
-.face.f-top    { transform: rotateX(90deg) translateZ(calc(var(--s) / 2)); --shade: 0; }
+.face.f-top    { transform: rotateX(90deg) translateZ(calc(var(--s) * (.5 - var(--drop, 0)))); --shade: 0; }
 .face.f-bottom { transform: rotateX(-90deg) translateZ(calc(var(--s) / 2)); --shade: .5; }
 .cube-shadow { width: calc(var(--s) * .9); height: 10px; margin-top: -4px; border-radius: 50%; background: radial-gradient(rgba(0,0,0,.45), transparent 70%); }
 @media (max-width: 520px) { .cubes { grid-template-columns: repeat(2, 1fr); } .scene { --s: 70px; } }
