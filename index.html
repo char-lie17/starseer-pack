@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Starseer · Bedwars texture pack</title>
+  <meta name="description" content="Free Bedwars texture pack for Minecraft 1.8.9 and 26.3: cosmic sky, connected glass, animations and a readable UI. / Texture pack gratuito de Bedwars para Minecraft 1.8.9 y 26.3.">
+  <meta property="og:title" content="Starseer · Bedwars texture pack">
+  <meta property="og:description" content="Free. Cosmic sky, connected glass, animations and a readable UI.">
+  <meta property="og:image" content="img/gallery/sky.jpg">
+  <link rel="icon" href="img/pack.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Pixelify+Sans:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Idioma: se aplica antes de pintar para que no se vea un parpadeo en el otro idioma -->
+  <script src="i18n.js"></script>
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="#/"><img src="img/pack.png" alt=""><span data-name>Starseer</span></a>
+    <nav class="links" aria-label="Pages" data-i18n-attr="aria-label:nav.label">
+      <a href="#/" data-route="inicio" data-i18n="nav.home">Home</a>
+      <a href="#/texturas" data-route="texturas" data-i18n="nav.textures">Textures</a>
+      <a href="#/galeria" data-route="galeria" data-i18n="nav.gallery">Gallery</a>
+      <a href="#/descargar" data-route="descargar" data-i18n="nav.download">Download</a>
+      <a href="#/ayuda" data-route="ayuda" data-i18n="nav.help">Help</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="btn btn-sm btn-ghost lang" id="lang" type="button" aria-label="Change language / Cambiar idioma">ES</button>
+      <a class="btn btn-sm btn-support" href="#/apoyar" data-route="apoyar"><span aria-hidden="true">♥</span> <span data-i18n="nav.support">Support</span></a>
+      <a class="btn btn-sm" href="#/descargar" data-i18n="nav.download">Download</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============================== INICIO -->
+    <div class="page" data-page="inicio">
+      <section class="hero">
+        <div class="hero-bg" aria-hidden="true"></div>
+        <canvas class="hero-stars" id="hero-stars" aria-hidden="true"></canvas>
+        <div class="wrap hero-inner">
+          <div class="hero-pearl" id="hero-pearl" role="img" aria-label="The pack's ender pearl, animated: the eye opens and looks around" data-i18n-attr="aria-label:hero.pearl">
+            <img class="tex" src="img/pack.png" alt="">
+          </div>
+          <h1 data-name>Starseer</h1>
+          <p class="tagline" data-tagline></p>
+          <div class="hero-actions">
+            <a class="btn" href="#/descargar" data-i18n="hero.download">Download for free</a>
+            <a class="btn btn-ghost" href="#/texturas" data-i18n="hero.all">See every texture</a>
+          </div>
+          <ul class="stats" id="stats"></ul>
+        </div>
+      </section>
+
+      <section class="wrap section" aria-labelledby="motion-title">
+        <h2 id="motion-title" class="reveal" data-i18n="motion.title">In motion</h2>
+        <p class="lead reveal" data-i18n="motion.lead"><span data-anim-count>41</span> animated textures, each on its own rhythm so they never blink in sync. This is how they look in game, frame by frame.</p>
+        <div class="showcase reveal">
+          <div class="stage">
+            <div class="stage-tex" id="stage-tex"></div>
+            <div class="stage-info">
+              <p class="stage-kicker" id="stage-kicker"></p>
+              <h3 id="stage-title"></h3>
+              <p id="stage-desc"></p>
+              <div class="stage-bar"><span id="stage-bar"></span></div>
+            </div>
+          </div>
+          <div class="reel" id="reel" role="group" aria-label="Pick an animation" data-i18n-attr="aria-label:motion.pick"></div>
+        </div>
+      </section>
+
+      <section class="wrap section" aria-labelledby="cubes-title">
+        <h2 id="cubes-title" class="reveal" data-i18n="cubes.title">In 3D</h2>
+        <p class="lead reveal" data-i18n="cubes.lead">Blocks the way you see them on the map, with per-face shading. Drag one to spin it.</p>
+        <div class="cubes reveal" id="cubes"></div>
+      </section>
+
+      <section class="wrap section">
+        <h2 class="reveal" data-i18n="features.title">What changes</h2>
+        <p class="lead reveal" data-i18n="features.lead">Everything that matters in a match reads at a glance. The rest looks clean and stays out of the way.</p>
+        <div class="features" id="features"></div>
+      </section>
+
+      <section class="wrap section">
+        <h2 class="reveal" data-i18n="compare.title">Before and after</h2>
+        <p class="lead reveal" data-i18n="compare.lead">Drag the bar. Vanilla 1.8.9 on the left, the pack on the right.</p>
+        <div class="compare reveal" id="compare" tabindex="0" role="slider" aria-label="Compare vanilla with the pack" data-i18n-attr="aria-label:compare.label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+          <img class="compare-img" id="cmp-pack" alt="">
+          <div class="compare-top" id="cmp-top"><img class="compare-img" id="cmp-vanilla" alt=""></div>
+          <div class="compare-handle" id="cmp-handle"><span></span></div>
+          <span class="compare-tag left">Vanilla</span>
+          <span class="compare-tag right">Pack</span>
+        </div>
+      </section>
+
+      <section class="wrap section">
+        <div class="cta reveal">
+          <div>
+            <h2 data-i18n="cta.title">Ready to try it?</h2>
+            <p data-i18n="cta.text">Free, no sign-up, one ZIP. Works on Lunar, Badlion and OptiFine.</p>
+          </div>
+          <div class="cta-actions">
+            <a class="btn" href="#/descargar" data-i18n="cta.download">Go to downloads</a>
+            <a class="btn btn-ghost" href="#/galeria" data-i18n="cta.gallery">See the gallery</a>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============================== TEXTURAS -->
+    <div class="page" data-page="texturas" hidden>
+      <section class="wrap section">
+        <h1 class="page-title" data-i18n="tex.title">Texture explorer</h1>
+        <p class="lead" data-i18n="tex.lead">Animations play just like in game. Click a texture to compare it with the original.</p>
+        <div class="toolbar">
+          <input type="search" id="search" placeholder="Search: wool, sword, ore…" aria-label="Search textures" data-i18n-attr="placeholder:tex.search;aria-label:tex.searchLabel">
+          <div class="chips" id="chips" role="group" aria-label="Categories" data-i18n-attr="aria-label:tex.categories"></div>
+          <label class="toggle"><input type="checkbox" id="only-anim"> <span data-i18n="tex.onlyAnim">Animated only</span></label>
+        </div>
+        <p class="count" id="count"></p>
+        <div class="grid" id="grid"></div>
+      </section>
+    </div>
+
+    <!-- ============================== GALERÍA -->
+    <div class="page" data-page="galeria" hidden>
+      <section class="wrap section">
+        <h1 class="page-title" data-i18n="gallery.title">Gallery</h1>
+        <p class="lead" data-i18n="gallery.lead">Every piece is drawn from the pack's current textures, animations included.</p>
+        <div class="gallery" id="gallery"></div>
+      </section>
+    </div>
+
+    <!-- ============================== DESCARGAR -->
+    <div class="page" data-page="descargar" hidden>
+      <section class="wrap section">
+        <h1 class="page-title" data-i18n="dl.title">Download</h1>
+        <p class="lead" data-i18n="dl.lead">Free, no sign-up.</p>
+        <div class="downloads" id="downloads"></div>
+        <p class="fine" data-i18n="dl.hash">Only download the pack from this page. The SHA-256 lets you check the file hasn't been tampered with. In PowerShell: <code>Get-FileHash .\Starseer_1.8.9.zip</code></p>
+      </section>
+
+      <section class="wrap section" id="instalar">
+        <h2 data-i18n="inst.title">Installation</h2>
+        <div class="tabs" role="tablist">
+          <button role="tab" aria-selected="true" data-tab="lunar">Lunar / Badlion</button>
+          <button role="tab" aria-selected="false" data-tab="optifine" data-i18n="inst.tabOptifine">OptiFine / official launcher</button>
+          <button role="tab" aria-selected="false" data-tab="modern" data-i18n="inst.tabModern">Version 26.3</button>
+        </div>
+        <div class="tab-panel" data-panel="lunar">
+          <ol class="steps" data-i18n="inst.lunar">
+            <li>Download <b>Starseer_1.8.9.zip</b>. Don't unzip it.</li>
+            <li>Open Lunar or Badlion on <b>1.8.9</b> and go to <b>Options → Resource Packs → Open Pack Folder</b>.</li>
+            <li>Move the ZIP into that folder (it's <code>%APPDATA%\.minecraft\resourcepacks</code>).</li>
+            <li>Back in game, move the pack to the right-hand column and click <b>Done</b>.</li>
+            <li>To see the sky and connected glass, turn on <b>Custom Sky</b>, <b>Connected Textures</b> and <b>Animated Textures</b> in your client settings.</li>
+          </ol>
+        </div>
+        <div class="tab-panel" data-panel="optifine" hidden>
+          <ol class="steps" data-i18n="inst.optifine">
+            <li>Install OptiFine for 1.8.9 (the pack works without it, but with no custom sky, connected glass or animated enchanting letters).</li>
+            <li>Press <kbd>Win</kbd> + <kbd>R</kbd>, type <code>%APPDATA%\.minecraft\resourcepacks</code> and press <b>Enter</b>.</li>
+            <li>Copy <b>Starseer_1.8.9.zip</b> there.</li>
+            <li>In game: <b>Options → Resource Packs</b>, enable the pack and click <b>Done</b>.</li>
+            <li>In <b>Options → Video Settings → Quality</b>: set <b>Connected Textures</b> to <i>Fancy</i> and <b>Custom Sky</b> to <i>ON</i>. In <b>Animations</b>, set everything to <i>ON</i>.</li>
+          </ol>
+        </div>
+        <div class="tab-panel" data-panel="modern" hidden>
+          <ol class="steps" data-i18n="inst.modern">
+            <li>Download <b>Starseer_26.3.zip</b>.</li>
+            <li>Open <b>Options → Resource Packs → Open Pack Folder</b> and copy the ZIP there.</li>
+            <li>Enable it and click <b>Done</b>. This version doesn't include the sky or connected glass yet.</li>
+          </ol>
+        </div>
+        <p class="fine" data-i18n="inst.trouble">Something not working? Check the <a href="#/ayuda">help</a>.</p>
+      </section>
+    </div>
+
+    <!-- ============================== AYUDA -->
+    <div class="page" data-page="ayuda" hidden>
+      <section class="wrap section" data-i18n="help.faq">
+        <h1 class="page-title">Help</h1>
+        <details><summary>Does it lower FPS?</summary><p>No. It's a 16×16 pack, the same resolution as vanilla. The custom sky and connected glass rely on OptiFine and cost very little.</p></details>
+        <details><summary>Does it work on Hypixel and other servers?</summary><p>Yes. It's a resource pack: it only changes how things look on your screen and gives no unfair advantage.</p></details>
+        <details><summary>I can't see the sky or the connected glass</summary><p>You need OptiFine (or Lunar or Badlion, which include it) with <b>Custom Sky</b> and <b>Connected Textures</b> turned on. Then reload with <kbd>F3</kbd> + <kbd>T</kbd>.</p></details>
+        <details><summary>Can I use it in my videos or streams?</summary><p>Of course. A link to this page in your description is appreciated.</p></details>
+        <details><summary>Can I edit or reupload it?</summary><p>You can edit it for personal use. Don't reupload it to other sites or sell it. Share a link to this page instead.</p></details>
+        <details><summary>Why does version 26.3 have fewer textures?</summary><p>It's being ported in batches. For now it includes wool, glass, defense blocks, weapons, tools and shop items.</p></details>
+      </section>
+      <section class="wrap section" data-i18n="help.terms">
+        <h2>Terms of use</h2>
+        <ul class="terms">
+          <li><b>Yes:</b> use it, record it, show it in videos and streams, and edit it for yourself.</li>
+          <li><b>No:</b> reupload it, sell it, put it behind ad-link shorteners or pass it off as your own.</li>
+        </ul>
+      </section>
+    </div>
+
+    <!-- ============================== APOYAR (solo desde el botón) -->
+    <div class="page" data-page="apoyar" hidden>
+      <section class="wrap section support-page">
+        <img class="support-icon" src="img/pack.png" alt="">
+        <h1 class="page-title" data-i18n="sup.title">Support the project</h1>
+        <p class="lead" data-i18n="sup.lead">The pack is and will stay free. If it saves you time or you enjoy playing with it, a contribution helps keep drawing textures and porting the modern version.</p>
+        <div class="support" id="support"></div>
+        <h2 class="sub" data-i18n="sup.other">Other ways to help</h2>
+        <ul class="terms" data-i18n="sup.otherList">
+          <li>Share it with your team or show it in your videos, with a link to this page.</li>
+          <li>Report textures that look off or that you'd like to see changed.</li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <p><span data-name>Starseer</span> · <span data-i18n="foot.updated">Updated</span> <span id="updated"></span> · <a href="#/apoyar" data-i18n="nav.support">Support</a></p>
+      <p class="community" id="community"></p>
+      <p class="fine" data-i18n="foot.legal">Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p>
+    </div>
+  </footer>
+
+  <dialog id="viewer" aria-label="Texture details" data-i18n-attr="aria-label:viewer.label">
+    <button class="close" data-close aria-label="Close" data-i18n-attr="aria-label:close">×</button>
+    <h3 id="viewer-title"></h3>
+    <div class="viewer-pair">
+      <figure><div class="viewer-box" id="viewer-vanilla"></div><figcaption>Vanilla</figcaption></figure>
+      <figure><div class="viewer-box" id="viewer-pack"></div><figcaption>Pack</figcaption></figure>
+    </div>
+    <p class="fine" id="viewer-meta"></p>
+  </dialog>
+
+  <dialog id="lightbox" aria-label="Gallery image" data-i18n-attr="aria-label:lightbox.label">
+    <button class="close" data-close aria-label="Close" data-i18n-attr="aria-label:close">×</button>
+    <img id="lightbox-img" alt="">
+    <div id="lightbox-set" class="set-big"></div>
+    <p id="lightbox-cap"></p>
+  </dialog>
+
+  <dialog id="thanks" class="thanks" aria-labelledby="thanks-title">
+    <button class="close" data-close aria-label="Close" data-i18n-attr="aria-label:close">×</button>
+    <img class="thanks-icon" src="img/pack.png" alt="">
+    <h3 id="thanks-title" data-i18n="thanks.title">Your download has started!</h3>
+    <p data-i18n="thanks.text">If it doesn't start, <a id="thanks-retry" href="#">click here</a>. Then follow the <a href="#/descargar" data-goto="instalar">install steps</a>.</p>
+    <div class="thanks-support">
+      <p data-i18n="thanks.support"><b>Enjoying the pack?</b> Consider supporting us. It's optional and helps keep it updated.</p>
+      <div class="thanks-links" id="thanks-links"></div>
+    </div>
+  </dialog>
+
+  <script src="config.js"></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

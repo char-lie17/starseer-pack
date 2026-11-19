@@ -1,0 +1,20 @@
+// Datos editables a mano. Lo generado (descargas, texturas, galería) está en data.js.
+// Los textos van en los dos idiomas: { en: "...", es: "..." }.
+window.SITE_CONFIG = {
+  name: "Starseer",
+  tagline: {
+    en: "A Bedwars texture pack: clean, readable and with a cosmic sky.",
+    es: "Texture pack de Bedwars: limpio, legible y con un cielo cósmico.",
+  },
+  // Enlaces de apoyo y comunidad. Los que queden vacíos no se muestran.
+  support: [
+    { id: "kofi", label: "Ko-fi", url: "", desc: { en: "A one-off coffee, no account needed.", es: "Un café puntual, sin cuenta." } },
+    { id: "paypal", label: "PayPal", url: "", desc: { en: "A direct donation.", es: "Donación directa." } },
+    { id: "patreon", label: "Patreon", url: "", desc: { en: "Monthly support and a vote on upcoming textures.", es: "Apoyo mensual y voto en las próximas texturas." } },
+  ],
+  community: [
+    { label: "Discord", url: "" },
+    { label: "YouTube", url: "" },
+    { label: "TikTok", url: "" },
+  ],
+};
