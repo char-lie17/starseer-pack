@@ -11,7 +11,7 @@ window.SITE_CONFIG = {
     { id: "kofi", label: "Ko-fi", url: "https://ko-fi.com/charlie520", desc: { en: "A one-off coffee, no account needed.", es: "Un café puntual, sin cuenta." } },
   ],
   community: [
-    { label: "Discord", url: "" },
+    { label: "Discord", url: "https://discord.gg/KKZrs9uh6w" },
     { label: "YouTube", url: "" },
     { label: "TikTok", url: "" },
   ],
