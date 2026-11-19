@@ -92,7 +92,17 @@ h2 { font-size: clamp(1.7rem, 4vw, 2.3rem); }
   .links { order: 3; width: 100%; overflow-x: auto; scrollbar-width: none; margin: 0 -4px; }
   .links::-webkit-scrollbar { display: none; }
 }
-@media (max-width: 420px) { .nav-actions .btn:not(.btn-support):not(.lang) { display: none; } }
+@media (max-width: 420px) { .nav-actions .btn:not(.btn-support):not(.lang):not(.btn-discord) { display: none; } }
+.btn-discord { background: #5865F2; color: #fff; display: inline-flex; align-items: center; gap: 7px; }
+.btn-discord:hover { background: #4752C4; }
+.btn-discord[hidden] { display: none; }
+.discord-logo { width: 18px; height: 18px; flex: none; }
+@media (max-width: 560px) { .nav .discord-label { display: none; } .nav .btn-discord { padding-inline: 10px; } }
+.discord-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+  background: linear-gradient(135deg, rgba(88,101,242,.16), rgba(88,101,242,.04)); border: 1px solid rgba(88,101,242,.4);
+  border-radius: var(--radius); padding: 22px 24px; }
+.discord-card h2 { font-size: 1.35rem; margin: 0 0 6px; }
+.discord-card p { margin: 0; color: var(--muted); max-width: 60ch; }
 
 /* ---------- páginas ---------- */
 .page[hidden] { display: none; }

@@ -68,6 +68,9 @@
       <details><summary>¿Puedo usarlo en mis videos o directos?</summary><p>Sí, claro. Se agradece que pongas el enlace a esta página en la descripción.</p></details>
       <details><summary>¿Puedo editarlo o resubirlo?</summary><p>Puedes editarlo para uso personal. No lo resubas a otras webs ni lo vendas. Comparte el enlace a esta página.</p></details>
       <details><summary>¿Por qué la versión 26.3 tiene menos texturas?</summary><p>Se está portando por partes. Por ahora incluye lanas, cristal, bloques de defensa, armas, herramientas y objetos de la tienda.</p></details>`,
+    "help.discordTitle": "¿Sigue sin funcionar? Pregunta en Discord",
+    "help.discordText": "Cuéntalo en #install-help o abre un hilo en #bugs con tu versión y cliente. Además, te enterarás antes que nadie de las versiones nuevas.",
+    "help.discordBtn": "Unirse al Discord",
     "help.terms": `
       <h2>Términos de uso</h2>
       <ul class="terms">

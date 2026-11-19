@@ -539,6 +539,11 @@
   $("#thanks-links").append(...(live_links.length ? live_links.map((s) => supportBtn(s, "btn btn-sm")) : []),
     el("a", { class: "btn btn-sm btn-ghost", href: "#/apoyar", "data-close": "", text: tr("More ways to support", "Más formas de apoyar") }));
   const comm = (CFG.community || []).filter((c) => c.url);
+  const discord = comm.find((c) => /discord/i.test(c.label));
+  if (discord) document.querySelectorAll(".js-discord, .js-discord-block").forEach((a) => {
+    if (a.tagName === "A") a.href = discord.url;
+    a.hidden = false;
+  });
   if (comm.length) $("#community").append(...comm.map((c) => el("a", { href: c.url, target: "_blank", rel: "noopener", text: c.label })));
 
   // ------------------------------------------------------------ páginas (#/ruta)
