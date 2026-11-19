@@ -9,7 +9,6 @@ window.SITE_CONFIG = {
   // Enlaces de apoyo y comunidad. Los que queden vacíos no se muestran.
   support: [
     { id: "kofi", label: "Ko-fi", url: "https://ko-fi.com/charlie520", desc: { en: "A one-off coffee, no account needed.", es: "Un café puntual, sin cuenta." } },
-    { id: "patreon", label: "Patreon", url: "", desc: { en: "Monthly support and a vote on upcoming textures.", es: "Apoyo mensual y voto en las próximas texturas." } },
   ],
   community: [
     { label: "Discord", url: "" },
