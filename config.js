@@ -15,4 +15,22 @@ window.SITE_CONFIG = {
     { label: "YouTube", url: "" },
     { label: "TikTok", url: "" },
   ],
+  // Historial de versiones, la más reciente primero. Al publicar una versión, añádela
+  // arriba: quien descargó una anterior verá estas novedades en la página de descarga.
+  changelog: [
+    {
+      version: "1.0.0",
+      date: "2026-11-19",
+      items: {
+        en: ["First public release: 317 reworked textures and 41 animations.",
+          "Cosmic sky (OptiFine Custom Sky) and connected glass in every colour.",
+          "Animated resources, clean HUD, readable team wool and clay.",
+          "Armour, tools and menus matched to the pack's palette."],
+        es: ["Primera versión pública: 317 texturas rehechas y 41 animaciones.",
+          "Cielo cósmico (Custom Sky de OptiFine) y cristal conectado en todos los colores.",
+          "Recursos animados, HUD limpio, lana y arcilla de equipo legibles.",
+          "Armaduras, herramientas y menús a juego con la paleta del pack."],
+      },
+    },
+  ],
 };

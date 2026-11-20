@@ -1,0 +1,135 @@
+{
+ "sky/cosmic": {
+  "src": "img/preview/sky/cosmic.jpg",
+  "x": 0,
+  "y": 0,
+  "w": 960,
+  "h": 480
+ },
+ "sky/soft": {
+  "src": "img/preview/sky/soft.jpg",
+  "x": 0,
+  "y": 0,
+  "w": 960,
+  "h": 480
+ },
+ "sky/aurora": {
+  "src": "img/preview/sky/aurora.jpg",
+  "x": 0,
+  "y": 0,
+  "w": 960,
+  "h": 480
+ },
+ "sky/starry": {
+  "src": "img/preview/sky/starry.jpg",
+  "x": 0,
+  "y": 0,
+  "w": 960,
+  "h": 480
+ },
+ "sky/black": {
+  "src": "img/preview/sky/black.jpg",
+  "x": 0,
+  "y": 0,
+  "w": 960,
+  "h": 480
+ },
+ "anim/all": {
+  "src": "img/preview/anim/all.webp",
+  "x": 207,
+  "y": 406,
+  "w": 546,
+  "h": 66
+ },
+ "anim/items": {
+  "src": "img/preview/anim/items.webp",
+  "x": 207,
+  "y": 406,
+  "w": 546,
+  "h": 66
+ },
+ "anim/none": {
+  "src": "img/preview/anim/none.webp",
+  "x": 207,
+  "y": 406,
+  "w": 546,
+  "h": 66
+ },
+ "fire/low": {
+  "src": "img/preview/fire/low.png",
+  "x": 0,
+  "y": 0,
+  "w": 960,
+  "h": 480
+ },
+ "fire/very_low": {
+  "src": "img/preview/fire/very_low.png",
+  "x": 0,
+  "y": 0,
+  "w": 960,
+  "h": 480
+ },
+ "fire/vanilla": {
+  "src": "img/preview/fire/vanilla.png",
+  "x": 0,
+  "y": 0,
+  "w": 960,
+  "h": 480
+ },
+ "glint/blue": {
+  "src": "img/preview/glint/blue.png",
+  "x": 770,
+  "y": 280,
+  "w": 160,
+  "h": 160
+ },
+ "glint/subtle": {
+  "src": "img/preview/glint/subtle.png",
+  "x": 770,
+  "y": 280,
+  "w": 160,
+  "h": 160
+ },
+ "glint/vanilla": {
+  "src": "img/preview/glint/vanilla.png",
+  "x": 770,
+  "y": 280,
+  "w": 160,
+  "h": 160
+ },
+ "glint/off": {
+  "src": "img/preview/glint/off.png",
+  "x": 770,
+  "y": 280,
+  "w": 160,
+  "h": 160
+ },
+ "gui/cobalt": {
+  "src": "img/preview/gui/cobalt.png",
+  "x": 304,
+  "y": 28,
+  "w": 352,
+  "h": 332
+ },
+ "gui/graphite": {
+  "src": "img/preview/gui/graphite.png",
+  "x": 304,
+  "y": 28,
+  "w": 352,
+  "h": 332
+ },
+ "gui/purple": {
+  "src": "img/preview/gui/purple.png",
+  "x": 304,
+  "y": 28,
+  "w": 352,
+  "h": 332
+ },
+ "gui/vanilla": {
+  "src": "img/preview/gui/vanilla.png",
+  "x": 304,
+  "y": 28,
+  "w": 352,
+  "h": 332
+ }
+}

@@ -530,28 +530,244 @@
 
   // ------------------------------------------------------------ descargas
   const kb = (b) => (b >= 1 << 20 ? (b / (1 << 20)).toFixed(1) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB");
+  // Personalización (solo 1.8.9): el ZIP base trae las opciones por defecto; las
+  // demás son piezas en options/<opción>/<variante>/ que se meten en el ZIP aquí,
+  // en el navegador, con JSZip. Lo elegido se recuerda en este navegador.
+  const OPT_KEY = "starseer.options";
+  const JSZIP_URL = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+  let jszip = null;
+  const loadJSZip = () => jszip || (jszip = new Promise((ok, fail) => {
+    if (window.JSZip) return ok(window.JSZip);
+    const s = el("script", { src: JSZIP_URL, crossorigin: "anonymous", referrerpolicy: "no-referrer" });
+    s.onload = () => ok(window.JSZip);
+    s.onerror = () => { jszip = null; fail(new Error("JSZip")); };
+    document.head.append(s);
+  }));
+  const hex = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  const nameOf = (file) => file.split("/").pop();
+  function saveBlob(url, name) {
+    const a = el("a", { href: url, download: name });
+    document.body.append(a);
+    a.click();
+    a.remove();
+  }
+
+  // Configuración en la URL: #/descargar?sky=black&anim=items (solo lo que no es por defecto)
+  const hashQuery = () => new URLSearchParams(location.hash.split("?")[1] || "");
+  // Novedades: se recuerda la versión de la última descarga (CFG.changelog, la primera es la actual)
+  const LAST_KEY = "starseer.lastDownload";
+  const changelog = CFG.changelog || [];
+  const current = changelog[0] && changelog[0].version;
+  function rememberDownload() {
+    if (!current) return;
+    try { localStorage.setItem(LAST_KEY, JSON.stringify({ version: current, date: new Date().toISOString().slice(0, 10) })); } catch {}
+    $("#news").hidden = true;
+    document.querySelectorAll('[href="#/descargar"]').forEach((a) => a.classList.remove("has-news"));
+  }
+  (() => {
+    let last = null;
+    try { last = JSON.parse(localStorage.getItem(LAST_KEY) || "null"); } catch {}
+    const i = last ? changelog.findIndex((c) => c.version === last.version) : -1;
+    if (!last || !current || last.version === current) return;
+    const newer = i < 0 ? changelog : changelog.slice(0, i);
+    const box = $("#news");
+    box.append(el("h2", { text: tr("New since your last download", "Novedades desde tu última descarga") }),
+      el("p", { class: "fine", text: tr(`You downloaded ${last.version} on ${last.date}. The current version is ${current}.`,
+        `Descargaste la ${last.version} el ${last.date}. La versión actual es la ${current}.`) }),
+      ...newer.map((c) => el("div", { class: "news-entry" },
+        el("h3", { text: `${c.version}${c.date ? " · " + c.date : ""}` }),
+        el("ul", {}, ...(L(c.items) || []).map((t) => el("li", { text: t }))))));
+    box.hidden = false;
+    document.querySelectorAll('[href="#/descargar"]').forEach((a) => a.classList.add("has-news"));
+  })();
+
   $("#downloads").append(...DATA.downloads.map((d) => {
-    const name = d.file.split("/").pop();
+    const custom = d.custom;
+    const opts = custom ? custom.options : [];
+    let pick = {};
+    try { pick = JSON.parse(localStorage.getItem(OPT_KEY) || "{}") || {}; } catch {}
+    // Un enlace compartido manda: parte de lo de por defecto y aplica lo que trae
+    const q = hashQuery();
+    if (opts.some((o) => q.has(o.id))) pick = Object.fromEntries(opts.map((o) => [o.id, q.get(o.id)]));
+    for (const o of opts) if (!o.variants.some((x) => x.id === pick[o.id])) pick[o.id] = o.default;
+    const variantOf = (o) => o.variants.find((x) => x.id === pick[o.id]);
+    const shareQuery = () => new URLSearchParams(opts.filter((o) => pick[o.id] !== o.default).map((o) => [o.id, pick[o.id]])).toString();
+    const isDefault = () => opts.every((o) => pick[o.id] === o.default);
+
+    const fileDd = el("dd");
+    const sizeDd = el("dd");
+    const hashCode = el("code");
+    let sha = d.sha256;
+    let built = null;   // { url, name } del último ZIP armado para esta combinación
     const copy = el("button", { class: "copy", text: tr("Copy", "Copiar") });
     copy.addEventListener("click", async () => {
-      try { await navigator.clipboard.writeText(d.sha256); copy.textContent = tr("Copied", "Copiado"); }
+      if (!sha) return;
+      try { await navigator.clipboard.writeText(sha); copy.textContent = tr("Copied", "Copiado"); }
       catch { copy.textContent = tr("Select it", "Selecciónalo"); }
       setTimeout(() => (copy.textContent = tr("Copy", "Copiar")), 1600);
     });
-    return el("article", { class: "dl" + (d.main ? " main" : "") },
+    const status = el("p", { class: "fine dl-status", role: "status" });
+    const btn = el("a", { class: "btn", href: d.file, download: nameOf(d.file), text: `${tr("Download", "Descargar")} ${d.id}` });
+    const customName = () => `Starseer_${d.id}_${tr("custom", "personalizado")}.zip`;
+
+    function refresh() {
+      if (built) URL.revokeObjectURL(built.url);
+      built = null;
+      status.textContent = "";
+      if (isDefault()) {
+        sha = d.sha256;
+        fileDd.textContent = nameOf(d.file);
+        sizeDd.textContent = kb(d.bytes);
+        sizeDd.removeAttribute("title");
+        btn.href = d.file;
+        btn.setAttribute("download", nameOf(d.file));
+      } else {
+        sha = "";
+        fileDd.textContent = customName();
+        const est = d.bytes + opts.reduce((n, o) => n + (variantOf(o).delta || 0), 0);
+        sizeDd.textContent = `≈ ${kb(est)}`;
+        sizeDd.title = tr("Estimate; the exact size appears when you download.", "Estimación; el tamaño exacto aparece al descargar.");
+        btn.href = d.file;   // por si falla el script
+        btn.setAttribute("download", customName());
+      }
+      hashCode.textContent = sha || "—";
+      hashCode.title = sha;
+      copy.hidden = !sha;
+      for (const p of presetBtns) p.setAttribute("aria-pressed", String(matches(p.preset)));
+      try { localStorage.setItem(OPT_KEY, JSON.stringify(pick)); } catch {}
+      if (!opts.length) return;
+      for (const o of opts) {
+        const img = layers[o.id], l = variantOf(o).layer;
+        if (!img || !l) continue;
+        img.src = v(l.src);
+        Object.assign(img.style, { left: pct(l.x, 0), top: pct(l.y, 1), width: pct(l.w, 0), height: pct(l.h, 1) });
+      }
+      if (location.hash.startsWith("#/descargar")) {
+        const qs = shareQuery();
+        history.replaceState(null, "", `${location.pathname}${location.search}#/descargar${qs ? "?" + qs : ""}`);
+      }
+    }
+
+    async function build() {
+      const JSZip = await loadJSZip();
+      const base = await fetch(d.file);
+      if (!base.ok) throw new Error(base.status);
+      const zip = await JSZip.loadAsync(await base.arrayBuffer());
+      for (const o of opts) {
+        const vr = o.variants.find((x) => x.id === pick[o.id]);
+        for (const rel of vr.files) {
+          const r = await fetch(`options/${o.id}/${vr.id}/${rel}?v=${DATA.version || ""}`);
+          if (!r.ok) throw new Error(`${rel}: ${r.status}`);
+          zip.file(rel, await r.arrayBuffer());
+        }
+        for (const rel of vr.remove || []) zip.remove(rel);
+      }
+      const bytes = await zip.generateAsync({ type: "uint8array", compression: "DEFLATE", compressionOptions: { level: 6 } });
+      sha = crypto.subtle ? hex(await crypto.subtle.digest("SHA-256", bytes)) : "";
+      const blob = new Blob([bytes], { type: "application/zip" });
+      sizeDd.textContent = kb(blob.size);
+      sizeDd.removeAttribute("title");
+      hashCode.textContent = sha || "—";
+      hashCode.title = sha;
+      copy.hidden = !sha;
+      return { url: URL.createObjectURL(blob), name: customName() };
+    }
+
+    btn.addEventListener("click", async (e) => {
+      const r = e.currentTarget.getBoundingClientRect();
+      const fx = () => burst(r.left + r.width / 2, r.top + r.height / 2);
+      if (isDefault()) { fx(); rememberDownload(); showThanks(d.file, nameOf(d.file)); return; }
+      e.preventDefault();
+      if (btn.getAttribute("aria-busy") === "true") return;
+      try {
+        if (!built) {
+          btn.setAttribute("aria-busy", "true");
+          status.textContent = tr("Building your pack…", "Armando tu pack…");
+          built = await build();
+          status.textContent = "";
+        }
+        saveBlob(built.url, built.name);
+        fx();
+        rememberDownload();
+        showThanks(built.url, built.name);
+      } catch (err) {
+        console.error(err);
+        status.replaceChildren(tr("Couldn't build the custom pack here. ", "No se pudo armar el pack personalizado aquí. "),
+          el("a", { href: d.file, download: nameOf(d.file), text: tr("Download the default one", "Descarga el de por defecto") }), ".");
+      } finally {
+        btn.removeAttribute("aria-busy");
+      }
+    });
+
+    // --- configurador
+    const scene = (custom && custom.scene) || [960, 480];
+    const pct = (n, axis) => `${(n / scene[axis]) * 100}%`;
+    const layers = {};
+    const preview = el("div", { class: "preview", role: "img",
+      "aria-label": tr("Preview of the chosen options", "Vista previa de las opciones elegidas") },
+      ...((custom && custom.layerOrder) || []).filter((id) => opts.some((o) => o.id === id)).map((id) =>
+        (layers[id] = el("img", { alt: "", class: `layer layer-${id}`, decoding: "async" }))));
+    const shareBtn = el("button", { type: "button", class: "btn btn-sm btn-ghost", text: tr("Copy link to this setup", "Copiar enlace de esta configuración") });
+    shareBtn.addEventListener("click", async () => {
+      const qs = shareQuery();
+      const url = `${location.origin}${location.pathname}${location.search}#/descargar${qs ? "?" + qs : ""}`;
+      try { await navigator.clipboard.writeText(url); shareBtn.textContent = tr("Link copied", "Enlace copiado"); }
+      catch { prompt(tr("Copy this link:", "Copia este enlace:"), url); }
+      setTimeout(() => (shareBtn.textContent = tr("Copy link to this setup", "Copiar enlace de esta configuración")), 1800);
+    });
+    const matches = (p) => opts.every((o) => pick[o.id] === (p.pick[o.id] || o.default));
+    const presetBtns = (custom ? custom.presets : []).map((p) => {
+      const b = el("button", { type: "button", class: "preset", title: L(p.desc), "aria-pressed": "false",
+        onclick: () => { pick = Object.fromEntries(opts.map((o) => [o.id, p.pick[o.id] || o.default])); syncInputs(); refresh(); } },
+        el("b", { text: L(p.label) }), el("span", { text: L(p.desc) }));
+      b.preset = p;
+      return b;
+    });
+    const inputs = [];
+    function syncInputs() {
+      for (const { input, o, vr } of inputs) input.checked = pick[o.id] === vr.id;
+      for (const f of fieldsets) f.desc.textContent = L(f.o.variants.find((x) => x.id === pick[f.o.id]).desc);
+    }
+    const fieldsets = opts.map((o) => {
+      const desc = el("p", { class: "opt-desc" });
+      const f = el("fieldset", { class: `opt opt-${o.id}` }, el("legend", { text: L(o.label) }),
+        el("div", { class: "opt-grid" }, ...o.variants.map((vr) => {
+          const input = el("input", { type: "radio", name: `opt-${d.id}-${o.id}`, value: vr.id,
+            onchange: () => { pick[o.id] = vr.id; desc.textContent = L(vr.desc); refresh(); } });
+          inputs.push({ input, o, vr });
+          return el("label", { class: "opt-card" }, input,
+            el("img", { src: v(vr.thumb), alt: "", loading: "lazy", width: "240", height: "120" }),
+            el("span", {}, L(vr.label), vr.id === o.default ? el("small", { text: tr("Default", "Por defecto") }) : null));
+        })), desc);
+      f.desc = desc;
+      f.o = o;
+      return f;
+    });
+    let config = null;
+    if (opts.length) {
+      config = el("section", { class: "config", "aria-label": tr("Customise", "Personalizar") },
+        el("h4", { text: tr("Customise before downloading", "Personaliza antes de descargar") }),
+        el("div", { class: "presets" }, ...presetBtns),
+        preview,
+        ...fieldsets,
+        el("div", { class: "config-actions" },
+          el("button", { type: "button", class: "btn btn-sm btn-ghost", text: tr("Back to default", "Volver a lo de por defecto"),
+            onclick: () => { pick = Object.fromEntries(opts.map((o) => [o.id, o.default])); syncInputs(); refresh(); } }),
+          shareBtn));
+      syncInputs();
+    }
+    refresh();
+
+    return el("article", { class: "dl" + (d.main ? " main" : "") + (config ? " has-config" : "") },
       el("h3", {}, L(d.label), d.main ? el("span", { class: "tag", text: tr("Recommended", "Recomendada") }) : null),
       el("p", { text: L(d.note) }),
+      config,
       el("dl", {},
-        el("dt", { text: tr("File", "Archivo") }), el("dd", { text: name }),
-        el("dt", { text: tr("Size", "Tamaño") }), el("dd", { text: kb(d.bytes) }),
+        el("dt", { text: tr("File", "Archivo") }), fileDd,
+        el("dt", { text: tr("Size", "Tamaño") }), sizeDd,
         el("dt", { text: tr("Textures", "Texturas") }), el("dd", { text: String(d.textures) }),
-        el("dt", { text: "SHA-256" }), el("dd", { class: "hash" }, el("code", { text: d.sha256, title: d.sha256 }), copy)),
-      el("a", { class: "btn", href: d.file, download: name, text: `${tr("Download", "Descargar")} ${d.id}`,
-        onclick: (e) => {
-          const r = e.currentTarget.getBoundingClientRect();
-          burst(r.left + r.width / 2, r.top + r.height / 2);
-          showThanks(d.file, name);
-        } }));
+        el("dt", { text: "SHA-256" }), el("dd", { class: "hash" }, hashCode, copy)),
+      btn, status);
   }));
 
   // Al descargar: la descarga sigue su curso y encima aparece el aviso de apoyo.
@@ -592,7 +808,7 @@
     : { inicio: "", texturas: "Textures", galeria: "Gallery", descargar: "Download", ayuda: "Help", apoyar: "Support" };
   const baseTitle = tr("Starseer · Bedwars texture pack", "Starseer · Texture pack de Bedwars");
   function route() {
-    let name = location.hash.replace(/^#\/?/, "") || "inicio";
+    let name = location.hash.replace(/^#\/?/, "").split("?")[0] || "inicio";
     if (!titles.hasOwnProperty(name)) name = "inicio";
     pages.forEach((p) => (p.hidden = p.dataset.page !== name));
     document.querySelectorAll("[data-route]").forEach((a) =>
