@@ -81,6 +81,7 @@
       <li>Compártelo con tu equipo o enséñalo en tus videos, con el enlace a esta página.</li>
       <li>Reporta texturas que se vean mal o que te gustaría ver cambiadas.</li>`,
     "foot.updated": "Actualizado el",
+    "foot.credit": "La ender pearl está inspirada en el diseño de WantedYew.",
     "foot.legal": "No es un producto oficial de Minecraft. No está aprobado por Mojang ni Microsoft ni asociado a ellos.",
     "viewer.label": "Detalle de la textura",
     "lightbox.label": "Imagen de la galería",
