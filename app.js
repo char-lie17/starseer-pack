@@ -248,9 +248,9 @@
     ["items/diamond_pickaxe", tr("Can I edit or reupload it?", "¿Puedo editarlo o resubirlo?"),
       tr("Edit it for yourself as much as you like. Please don't reupload or sell it: share a link to this page instead.",
          "Edítalo para ti todo lo que quieras. No lo resubas ni lo vendas: comparte el enlace a esta página.")],
-    ["items/emerald", tr("Why does 26.3 have fewer textures?", "¿Por qué 26.3 tiene menos texturas?"),
-      tr("It's being ported in batches. For now it has wool, glass, defense blocks, weapons, tools and shop items.",
-         "Se está portando por partes. Por ahora trae lanas, cristal, bloques de defensa, armas, herramientas y objetos de la tienda.")],
+    ["items/emerald", tr("Which blocks does 26.3 cover?", "¿Qué bloques cubre la versión 26.3?"),
+      tr("The pack covers all 1,300 textures in the 26.3 block texture folder, including doors, rails, crops and flowing water.",
+         "El pack cubre las 1.300 texturas de la carpeta de bloques de 26.3, incluidas las puertas, los raíles, los cultivos y el agua en movimiento.")],
   ];
   document.querySelectorAll("[data-faq]").forEach((host) => {
     const group = "faq-" + host.dataset.faq;
@@ -534,6 +534,7 @@
   // demás son piezas en options/<opción>/<variante>/ que se meten en el ZIP aquí,
   // en el navegador, con JSZip. Lo elegido se recuerda en este navegador.
   const OPT_KEY = "starseer.options";
+  const ITEM_KEY = "starseer.items";
   const JSZIP_URL = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
   let jszip = null;
   const loadJSZip = () => jszip || (jszip = new Promise((ok, fail) => {
@@ -584,21 +585,34 @@
   $("#downloads").append(...DATA.downloads.map((d) => {
     const custom = d.custom;
     const opts = custom ? custom.options : [];
-    let pick = {};
+    // Variantes por ítem (item_variants.py): se aplican después de las opciones globales
+    const items = (custom && custom.items) || [];
+    let pick = {}, ipick = {};
     try { pick = JSON.parse(localStorage.getItem(OPT_KEY) || "{}") || {}; } catch {}
+    try { ipick = JSON.parse(localStorage.getItem(ITEM_KEY) || "{}") || {}; } catch {}
     // Un enlace compartido manda: parte de lo de por defecto y aplica lo que trae
+    // (los ítems van con prefijo: ?sky=black&i_ender_pearl=adriatic)
     const q = hashQuery();
-    if (opts.some((o) => q.has(o.id))) pick = Object.fromEntries(opts.map((o) => [o.id, q.get(o.id)]));
+    if (opts.some((o) => q.has(o.id)) || items.some((it) => q.has("i_" + it.id))) {
+      pick = Object.fromEntries(opts.map((o) => [o.id, q.get(o.id)]));
+      ipick = Object.fromEntries(items.map((it) => [it.id, q.get("i_" + it.id)]));
+    }
     for (const o of opts) if (!o.variants.some((x) => x.id === pick[o.id])) pick[o.id] = o.default;
+    for (const it of items) if (!it.variants.some((x) => x.id === ipick[it.id])) ipick[it.id] = it.default;
     const variantOf = (o) => o.variants.find((x) => x.id === pick[o.id]);
-    const shareQuery = () => new URLSearchParams(opts.filter((o) => pick[o.id] !== o.default).map((o) => [o.id, pick[o.id]])).toString();
-    const isDefault = () => opts.every((o) => pick[o.id] === o.default);
+    const itemVariant = (it) => it.variants.find((x) => x.id === ipick[it.id]);
+    const shareQuery = () => new URLSearchParams([
+      ...opts.filter((o) => pick[o.id] !== o.default).map((o) => [o.id, pick[o.id]]),
+      ...items.filter((it) => ipick[it.id] !== it.default).map((it) => ["i_" + it.id, ipick[it.id]])]).toString();
+    const isDefault = () => opts.every((o) => pick[o.id] === o.default) && items.every((it) => ipick[it.id] === it.default);
 
     const fileDd = el("dd");
     const sizeDd = el("dd");
     const hashCode = el("code");
     let sha = d.sha256;
     let built = null;   // { url, name } del último ZIP armado para esta combinación
+    let touched = false;   // false hasta el primer refresh(): no toca la URL al cargar
+    let syncView = () => {};   // lo rellena el configurador: resumen, títulos y barra móvil
     const copy = el("button", { class: "copy", text: tr("Copy", "Copiar") });
     copy.addEventListener("click", async () => {
       if (!sha) return;
@@ -624,7 +638,8 @@
       } else {
         sha = "";
         fileDd.textContent = customName();
-        const est = d.bytes + opts.reduce((n, o) => n + (variantOf(o).delta || 0), 0);
+        const est = d.bytes + opts.reduce((n, o) => n + (variantOf(o).delta || 0), 0)
+          + items.reduce((n, it) => n + (itemVariant(it).delta || 0), 0);
         sizeDd.textContent = `≈ ${kb(est)}`;
         sizeDd.title = tr("Estimate; the exact size appears when you download.", "Estimación; el tamaño exacto aparece al descargar.");
         btn.href = d.file;   // por si falla el script
@@ -635,14 +650,18 @@
       copy.hidden = !sha;
       for (const p of presetBtns) p.setAttribute("aria-pressed", String(matches(p.preset)));
       try { localStorage.setItem(OPT_KEY, JSON.stringify(pick)); } catch {}
-      if (!opts.length) return;
+      // Se suma a lo guardado: un ítem que solo existe en otra versión no se pierde
+      try { localStorage.setItem(ITEM_KEY, JSON.stringify({ ...JSON.parse(localStorage.getItem(ITEM_KEY) || "{}"), ...ipick })); } catch {}
+      if (!opts.length && !items.length) return;
+      syncView();
       for (const o of opts) {
         const img = layers[o.id], l = variantOf(o).layer;
         if (!img || !l) continue;
         img.src = v(l.src);
         Object.assign(img.style, { left: pct(l.x, 0), top: pct(l.y, 1), width: pct(l.w, 0), height: pct(l.h, 1) });
       }
-      if (location.hash.startsWith("#/descargar")) {
+      // Solo al cambiar algo: al cargar, cada versión reescribiría el enlace de las demás
+      if (touched && location.hash.startsWith("#/descargar")) {
         const qs = shareQuery();
         history.replaceState(null, "", `${location.pathname}${location.search}#/descargar${qs ? "?" + qs : ""}`);
       }
@@ -662,6 +681,21 @@
         }
         for (const rel of vr.remove || []) zip.remove(rel);
       }
+      // «Sin animaciones» también deja quietos los ítems animados de las variantes:
+      // entra su primer fotograma (_static/) y no su .mcmeta
+      const frozen = opts.some((o) => variantOf(o).freezeItems);
+      for (const it of items) {
+        const vr = itemVariant(it);
+        const dir = `items/${d.id}/${it.id}/${vr.id}`;
+        const still = (rel) => frozen && (vr.static || []).includes(rel);
+        for (const rel of vr.files) {
+          if (rel.endsWith(".mcmeta") && still(rel.slice(0, -".mcmeta".length))) { zip.remove(rel); continue; }
+          const r = await fetch(`${dir}/${still(rel) ? "_static/" : ""}${rel}?v=${DATA.version || ""}`);
+          if (!r.ok) throw new Error(`${rel}: ${r.status}`);
+          zip.file(rel, await r.arrayBuffer());
+        }
+        for (const rel of vr.remove || []) zip.remove(rel);
+      }
       const bytes = await zip.generateAsync({ type: "uint8array", compression: "DEFLATE", compressionOptions: { level: 6 } });
       sha = crypto.subtle ? hex(await crypto.subtle.digest("SHA-256", bytes)) : "";
       const blob = new Blob([bytes], { type: "application/zip" });
@@ -670,6 +704,7 @@
       hashCode.textContent = sha || "—";
       hashCode.title = sha;
       copy.hidden = !sha;
+      syncView();
       return { url: URL.createObjectURL(blob), name: customName() };
     }
 
@@ -700,6 +735,9 @@
     });
 
     // --- configurador
+    // Escritorio: a la izquierda (fija) la vista previa y la caja de descarga con el
+    // resumen; a la derecha las opciones en tarjetas. Móvil: una columna y una barra
+    // fija abajo con el botón de descargar mientras se eligen opciones.
     const scene = (custom && custom.scene) || [960, 480];
     const pct = (n, axis) => `${(n / scene[axis]) * 100}%`;
     const layers = {};
@@ -707,67 +745,164 @@
       "aria-label": tr("Preview of the chosen options", "Vista previa de las opciones elegidas") },
       ...((custom && custom.layerOrder) || []).filter((id) => opts.some((o) => o.id === id)).map((id) =>
         (layers[id] = el("img", { alt: "", class: `layer layer-${id}`, decoding: "async" }))));
-    const shareBtn = el("button", { type: "button", class: "btn btn-sm btn-ghost", text: tr("Copy link to this setup", "Copiar enlace de esta configuración") });
+    const shareLabel = tr("Copy link", "Copiar enlace");
+    const shareBtn = el("button", { type: "button", class: "linkish", text: shareLabel });
     shareBtn.addEventListener("click", async () => {
       const qs = shareQuery();
       const url = `${location.origin}${location.pathname}${location.search}#/descargar${qs ? "?" + qs : ""}`;
       try { await navigator.clipboard.writeText(url); shareBtn.textContent = tr("Link copied", "Enlace copiado"); }
       catch { prompt(tr("Copy this link:", "Copia este enlace:"), url); }
-      setTimeout(() => (shareBtn.textContent = tr("Copy link to this setup", "Copiar enlace de esta configuración")), 1800);
+      setTimeout(() => (shareBtn.textContent = shareLabel), 1800);
     });
     const matches = (p) => opts.every((o) => pick[o.id] === (p.pick[o.id] || o.default));
     const presetBtns = (custom ? custom.presets : []).map((p) => {
       const b = el("button", { type: "button", class: "preset", title: L(p.desc), "aria-pressed": "false",
-        onclick: () => { pick = Object.fromEntries(opts.map((o) => [o.id, p.pick[o.id] || o.default])); syncInputs(); refresh(); } },
-        el("b", { text: L(p.label) }), el("span", { text: L(p.desc) }));
+        onclick: () => { pick = Object.fromEntries(opts.map((o) => [o.id, p.pick[o.id] || o.default])); refresh(); } },
+        L(p.label));
       b.preset = p;
       return b;
     });
-    const inputs = [];
-    function syncInputs() {
-      for (const { input, o, vr } of inputs) input.checked = pick[o.id] === vr.id;
-      for (const f of fieldsets) f.desc.textContent = L(f.o.variants.find((x) => x.id === pick[f.o.id]).desc);
-    }
-    const fieldsets = opts.map((o) => {
+    const defaultMark = () => el("span", { class: "def-mark", title: tr("Default", "Por defecto") },
+      el("span", { class: "sr-only", text: tr("(default)", "(por defecto)") }));
+
+    // Opciones globales: una tarjeta por opción; el título dice lo elegido y la
+    // descripción va dentro, en una franja de alto fijo para que nada salte.
+    const optCards = opts.map((o) => {
+      const current = el("span", { class: "opt-current" });
       const desc = el("p", { class: "opt-desc" });
-      const f = el("fieldset", { class: `opt opt-${o.id}` }, el("legend", { text: L(o.label) }),
-        el("div", { class: "opt-grid" }, ...o.variants.map((vr) => {
-          const input = el("input", { type: "radio", name: `opt-${d.id}-${o.id}`, value: vr.id,
-            onchange: () => { pick[o.id] = vr.id; desc.textContent = L(vr.desc); refresh(); } });
-          inputs.push({ input, o, vr });
-          return el("label", { class: "opt-card" }, input,
+      const radios = o.variants.map((vr) => {
+        const input = el("input", { type: "radio", name: `opt-${d.id}-${o.id}`, value: vr.id,
+          onchange: () => { pick[o.id] = vr.id; refresh(); } });
+        const label = el("label", { class: "opt-card" }, input,
+          el("span", { class: "opt-thumb" },
             el("img", { src: v(vr.thumb), alt: "", loading: "lazy", width: "240", height: "120" }),
-            el("span", {}, L(vr.label), vr.id === o.default ? el("small", { text: tr("Default", "Por defecto") }) : null));
-        })), desc);
-      f.desc = desc;
-      f.o = o;
-      return f;
+            vr.id === o.default ? defaultMark() : null),
+          el("span", { class: "opt-name", text: L(vr.label) }));
+        return { input, vr };
+      });
+      const card = el("fieldset", { class: `opt opt-${o.id}` },
+        el("legend", {}, el("span", { text: L(o.label) }), current),
+        el("div", { class: "opt-grid" }, ...radios.map((r) => r.input.parentElement)), desc);
+      return { card, sync() {
+        const vr = variantOf(o);
+        for (const r of radios) r.input.checked = r.vr.id === vr.id;
+        current.textContent = L(vr.label);
+        desc.textContent = L(vr.desc);
+      } };
     });
+
+    // Ítems: lista con el icono de lo elegido, nombre y frase, y las variantes como muestras
+    const itemRows = items.map((it) => {
+      const big = el("img", { class: "item-big", alt: "", width: "48", height: "48" });
+      const note = el("p", { class: "item-note" });
+      const nameId = `item-${d.id}-${it.id}-name`;
+      const radios = it.variants.map((vr) => {
+        const input = el("input", { type: "radio", name: `item-${d.id}-${it.id}`, value: vr.id,
+          onchange: () => { ipick[it.id] = vr.id; refresh(); } });
+        el("label", { class: "item-chip", title: L(vr.label) }, input,
+          el("img", { src: v(vr.icon), alt: "", loading: "lazy", width: "32", height: "32" }),
+          el("span", { class: "sr-only", text: L(vr.label) }),
+          vr.id === it.default ? defaultMark() : null);
+        return { input, vr };
+      });
+      const row = el("div", { class: "item-row", role: "radiogroup", "aria-labelledby": nameId },
+        big,
+        el("div", { class: "item-text" }, el("b", { id: nameId, text: L(it.label) }), note),
+        el("div", { class: "item-chips" }, ...radios.map((r) => r.input.parentElement)));
+      return { it, row, sync() {
+        const vr = itemVariant(it);
+        for (const r of radios) r.input.checked = r.vr.id === vr.id;
+        big.src = v(vr.icon);
+        note.replaceChildren(el("span", { class: "item-pick", text: L(vr.label) }), ` · ${L(vr.desc)}`,
+          ...(vr.credit ? [el("small", { text: ` · ${tr("Idea by", "Idea de")} ${vr.credit}` })] : []));
+      } };
+    });
+    const groups = [];
+    for (const r of itemRows) {
+      const name = L(r.it.group) || "";
+      let g = groups.find((x) => x.name === name);
+      if (!g) groups.push((g = { name, rows: [] }));
+      g.rows.push(r.row);
+    }
+    const itemCard = items.length ? el("section", { class: "opt opt-items", "aria-label": tr("Items", "Ítems") },
+      el("div", { class: "opt-head" }, el("span", { text: tr("Items", "Ítems") }),
+        el("span", { class: "opt-current", text: tr("Swap single items; the rest stays the same.", "Cambia ítems sueltos; el resto queda igual.") })),
+      ...groups.map((g) => el("div", { class: "item-group" }, g.name ? el("h5", { text: g.name }) : null, ...g.rows))) : null;
+
+    // Caja de descarga: lo que cambiaste, tamaño, botón y detalles del archivo
+    const chosen = el("div", { class: "chosen" });
+    const resetAll = () => {
+      pick = Object.fromEntries(opts.map((o) => [o.id, o.default]));
+      ipick = Object.fromEntries(items.map((it) => [it.id, it.default]));
+      refresh();
+    };
+    const resetBtn = el("button", { type: "button", class: "linkish", text: tr("Reset", "Restablecer"), onclick: resetAll });
+    const metaSize = el("span");
+    const buy = el("div", { class: "cfg-buy" },
+      el("h5", { text: tr("Your changes", "Tus cambios") }), chosen,
+      el("p", { class: "buy-meta" }, metaSize, el("span", { text: `Minecraft ${d.id}` })),
+      btn, status,
+      el("p", { class: "buy-links" }, resetBtn, shareBtn),
+      el("details", { class: "buy-details" }, el("summary", { text: tr("File details", "Detalles del archivo") }),
+        el("dl", {},
+          el("dt", { text: tr("File", "Archivo") }), fileDd,
+          el("dt", { text: tr("Size", "Tamaño") }), sizeDd,
+          el("dt", { text: tr("Textures", "Texturas") }), el("dd", { text: String(d.textures) }),
+          el("dt", { text: "SHA-256" }), el("dd", { class: "hash" }, hashCode, copy))));
+
+    // Barra móvil: aparece mientras el configurador está a la vista y la caja no
+    const barInfo = el("span", { class: "bar-info" });
+    const bar = el("div", { class: "cfg-bar", hidden: "" }, barInfo,
+      el("button", { type: "button", class: "btn btn-sm", text: tr("Download", "Descargar"),
+        onclick: () => btn.click() }));
+
     let config = null;
-    if (opts.length) {
-      config = el("section", { class: "config", "aria-label": tr("Customise", "Personalizar") },
-        el("h4", { text: tr("Customise before downloading", "Personaliza antes de descargar") }),
-        el("div", { class: "presets" }, ...presetBtns),
-        preview,
-        ...fieldsets,
-        el("div", { class: "config-actions" },
-          el("button", { type: "button", class: "btn btn-sm btn-ghost", text: tr("Back to default", "Volver a lo de por defecto"),
-            onclick: () => { pick = Object.fromEntries(opts.map((o) => [o.id, o.default])); syncInputs(); refresh(); } }),
-          shareBtn));
-      syncInputs();
+    if (opts.length || items.length) {
+      const changes = () => [
+        ...opts.filter((o) => pick[o.id] !== o.default).map((o) => ({ label: `${L(o.label)}: ${L(variantOf(o).label)}`, reset: () => { pick[o.id] = o.default; } })),
+        ...items.filter((it) => ipick[it.id] !== it.default).map((it) => ({ label: `${L(it.label)}: ${L(itemVariant(it).label)}`, reset: () => { ipick[it.id] = it.default; } }))];
+      syncView = () => {
+        for (const c of optCards) c.sync();
+        for (const r of itemRows) r.sync();
+        const list = changes();
+        chosen.replaceChildren(...(list.length
+          ? list.map((c) => el("button", { type: "button", class: "chip-x", title: tr("Back to default", "Volver a lo de por defecto"),
+              onclick: () => { c.reset(); refresh(); } }, c.label, el("span", { "aria-hidden": "true", text: "×" })))
+          : [el("p", { class: "chosen-none", text: tr("None: the pack as designed.", "Ninguno: el pack tal como está pensado.") })]));
+        resetBtn.hidden = !list.length;
+        metaSize.textContent = sizeDd.textContent;
+        barInfo.textContent = `${list.length ? tr(`${list.length} changes`, `${list.length} ${list.length === 1 ? "cambio" : "cambios"}`) : tr("Default pack", "Pack por defecto")} · ${sizeDd.textContent}`;
+      };
+      const side = el("div", { class: "cfg-side" }, opts.length ? preview : null, buy);
+      const main = el("div", { class: "cfg-main" },
+        presetBtns.length ? el("div", { class: "presets", role: "group", "aria-label": tr("Presets", "Ajustes rápidos") },
+          el("span", { class: "presets-label", text: tr("Presets", "Ajustes rápidos") }), ...presetBtns) : null,
+        ...optCards.map((c) => c.card), itemCard);
+      config = el("section", { class: "cfg", "aria-label": tr("Customise", "Personalizar") }, side, main, bar);
+      // Barra móvil: visible con el configurador en pantalla y la caja de descarga fuera
+      if ("IntersectionObserver" in window) {
+        let cfgIn = false, buyIn = false;
+        const upd = () => (bar.hidden = !(cfgIn && !buyIn));
+        new IntersectionObserver(([e]) => { cfgIn = e.isIntersecting; upd(); }).observe(main);
+        new IntersectionObserver(([e]) => { buyIn = e.isIntersecting; upd(); }).observe(buy);
+      }
     }
     refresh();
+    touched = true;
 
-    return el("article", { class: "dl" + (d.main ? " main" : "") + (config ? " has-config" : "") },
+    if (!config) return el("article", { class: "dl" + (d.main ? " main" : "") },
       el("h3", {}, L(d.label), d.main ? el("span", { class: "tag", text: tr("Recommended", "Recomendada") }) : null),
       el("p", { text: L(d.note) }),
-      config,
       el("dl", {},
         el("dt", { text: tr("File", "Archivo") }), fileDd,
         el("dt", { text: tr("Size", "Tamaño") }), sizeDd,
         el("dt", { text: tr("Textures", "Texturas") }), el("dd", { text: String(d.textures) }),
         el("dt", { text: "SHA-256" }), el("dd", { class: "hash" }, hashCode, copy)),
       btn, status);
+    return el("article", { class: "dl has-config" + (d.main ? " main" : "") + (opts.length ? "" : " items-only") },
+      el("h3", {}, L(d.label), d.main ? el("span", { class: "tag", text: tr("Recommended", "Recomendada") }) : null),
+      el("p", { text: L(d.note) }),
+      config);
   }));
 
   // Al descargar: la descarga sigue su curso y encima aparece el aviso de apoyo.
