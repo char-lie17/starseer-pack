@@ -239,6 +239,15 @@ h2 { font-size: clamp(1.7rem, 4vw, 2.3rem); }
 .shot div.txt { padding: 12px 14px 14px; }
 .shot h3 { font-size: 1.05rem; margin: 0 0 2px; }
 .shot p { margin: 0; color: var(--muted); font-size: .88rem; }
+.fracture-card { cursor: default; }
+.fracture-tile { --tile-size: 144px; width: var(--tile-size); height: var(--tile-size); position: relative; }
+.fracture-base, .fracture-tile img { position: absolute; inset: 0; image-rendering: pixelated; }
+.fracture-base { background-size: 100% auto; background-repeat: no-repeat; }
+.fracture-card .txt { display: grid; gap: .65rem; }
+.fracture-card label { display: grid; grid-template-columns: 6.25rem 1fr; align-items: center; }
+.fracture-card select { min-width: 0; padding: .3rem; font: inherit; color: var(--text); background: var(--surface-2); }
+.fracture-card input { width: 100%; accent-color: var(--mint); }
+.fracture-card button { justify-self: start; }
 @media (max-width: 400px) { .gallery { grid-template-columns: 1fr; } }
 
 /* ---------- descargas ---------- */

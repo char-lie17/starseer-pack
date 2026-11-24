@@ -502,7 +502,65 @@
   const lightbox = $("#lightbox");
   const setCanvases = (ids) => ids.map((id) => byId.get(id)).filter(Boolean)
     .map((t) => texCanvas(t.pack, t.name));
+
+  function fracturePreview(title) {
+    const materials = [
+      ["stone", tr("Stone", "Piedra")], ["obsidian", tr("Obsidian", "Obsidiana")],
+      ["wool_colored_white", tr("White wool", "Lana blanca")],
+      ["wool_colored_red", tr("Red wool", "Lana roja")],
+    ];
+    const material = el("select", {}, ...materials.map(([id, text]) => el("option", { value: id, text })));
+    const range = el("input", { type: "range", min: 1, max: 10, value: 1, step: 1 });
+    const stage = el("span");
+    const play = el("button", { type: "button", class: "btn btn-ghost", text: tr("Play", "Reproducir") });
+    const base = el("div", { class: "fracture-base" });
+    const crack = el("img", { alt: "", width: 16, height: 16 });
+    const preview = el("div", { class: "fracture-tile", role: "img" }, base, crack);
+    let timer;
+    function show() {
+      const readout = tr("Stage", "Etapa") + " " + range.value + " / 10";
+      stage.textContent = readout;
+      range.setAttribute("aria-valuetext", readout);
+      preview.setAttribute("aria-label", material.selectedOptions[0].text + ", " + readout);
+      crack.src = v(byId.get("blocks/destroy_stage_" + (Number(range.value) - 1)).pack.src);
+    }
+    function chooseMaterial() {
+      // Freeze the underlying block at its first frame so only the crack changes.
+      const texture = byId.get("blocks/" + material.value).pack;
+      const first = texture.anim?.frames[0][0] || 0;
+      base.style.backgroundImage = 'url("' + v(texture.src) + '")';
+      base.style.backgroundPositionY = "calc(-1 * " + first + " * var(--tile-size))";
+      show();
+    }
+    function pause() {
+      clearTimeout(timer);
+      timer = undefined;
+      play.textContent = tr("Play", "Reproducir");
+    }
+    function advance() {
+      range.value = Number(range.value) % 10 + 1;
+      show();
+      timer = setTimeout(advance, range.value === "10" ? 750 : 280);
+    }
+    play.addEventListener("click", () => {
+      if (timer !== undefined) return pause();
+      play.textContent = tr("Pause", "Pausar");
+      advance();
+    });
+    material.addEventListener("change", chooseMaterial);
+    range.addEventListener("input", () => { pause(); show(); });
+    chooseMaterial();
+    const card = el("article", { class: "shot fracture-card" },
+      el("div", { class: "frame" }, preview),
+      el("div", { class: "txt" }, el("h3", { text: title }),
+        el("label", {}, tr("Material", "Material"), material),
+        el("label", {}, stage, range), play));
+    new IntersectionObserver(([entry]) => { if (!entry.isIntersecting) pause(); }).observe(card);
+    return card;
+  }
+
   $("#gallery").append(...DATA.gallery.map((g) => {
+    if (g.src === "img/gallery/fracture.gif") return fracturePreview(L(g.title));
     const frame = g.set
       ? el("div", { class: "frame set", style: `--cols:${g.cols}` }, ...setCanvases(g.set))
       : el("div", { class: "frame" }, el("img", { src: v(g.src), alt: L(g.title), loading: "lazy", width: g.w, height: g.h }));
